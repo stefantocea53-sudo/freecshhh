@@ -39,21 +39,7 @@
       overflow-x: hidden;
     }
 
-    body.lock {
-      overflow: hidden;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    button,
-    a {
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .age-gate {
+    .payout-gate {
       position: fixed;
       inset: 0;
       z-index: 999;
@@ -63,17 +49,19 @@
       background:
         radial-gradient(circle at top, rgba(57,255,136,.34), transparent 38%),
         rgba(2,5,3,.97);
-      transition: .25s ease;
-    }
-
-    .age-gate.hide {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transform: scale(1.03);
+      transition: .22s ease;
     }
 
-    .age-box {
+    .payout-gate.show {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .payout-box {
       width: 100%;
       max-width: 360px;
       padding: 26px 20px 20px;
@@ -84,7 +72,7 @@
       box-shadow: var(--shadow);
     }
 
-    .age-icon {
+    .payout-icon {
       width: 76px;
       height: 76px;
       border-radius: 24px;
@@ -92,32 +80,36 @@
       display: grid;
       place-items: center;
       color: #031108;
-      font-size: 28px;
+      font-size: 27px;
       font-weight: 1000;
       background: linear-gradient(180deg, #67ffa3, #20d66b);
       box-shadow: 0 16px 36px rgba(57,255,136,.28);
     }
 
-    .age-box h2 {
-      font-size: 42px;
-      line-height: .9;
-      letter-spacing: -.06em;
-      margin-bottom: 10px;
+    .payout-box h2 {
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: -.055em;
+      margin-bottom: 12px;
     }
 
-    .age-box p {
+    .payout-box p {
       color: var(--muted);
       font-size: 14px;
-      line-height: 1.45;
+      line-height: 1.5;
       margin-bottom: 18px;
     }
 
-    .age-actions {
+    .payout-box p strong {
+      color: var(--green);
+    }
+
+    .payout-actions {
       display: grid;
       gap: 10px;
     }
 
-    .age-actions button {
+    .payout-actions button {
       border: 0;
       min-height: 56px;
       border-radius: 18px;
@@ -126,24 +118,16 @@
       cursor: pointer;
     }
 
-    .yes {
+    .continue-btn {
       color: #031108;
       background: linear-gradient(180deg, #67ffa3, #20d66b);
       box-shadow: 0 16px 30px rgba(32,214,107,.24);
     }
 
-    .no {
+    .back-btn {
       color: #e8f3eb;
       background: rgba(255,255,255,.07);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-
-    .deny {
-      display: none;
-      margin-top: 12px;
-      color: #ffc0c7;
-      font-size: 12px;
-      font-weight: 800;
+      border: 1px solid rgba(255,255,255,.10) !important;
     }
 
     .page {
@@ -528,21 +512,20 @@
   </style>
 </head>
 
-<body class="lock">
+<body>
 
-  <div class="age-gate" id="ageGate">
-    <div class="age-box">
-      <div class="age-icon">21+</div>
-      <h2>Are you 21 or older?</h2>
-      <p>This page is only intended for visitors aged 21 and over.</p>
+  <div class="payout-gate" id="payoutGate" aria-hidden="true">
+    <div class="payout-box">
+      <div class="payout-icon">21+</div>
+      <h2>Quick payout tip</h2>
+      <p>
+        On the next page if you are <strong>21 or older</strong> select the
+        <strong>21+</strong> option to see eligible offers that may have higher payouts.
+      </p>
 
-      <div class="age-actions">
-        <button class="yes" id="yesBtn">Yes, I am 21 or older</button>
-        <button class="no" id="noBtn">No, I am under 21</button>
-      </div>
-
-      <div class="deny" id="denyMsg">
-        Sorry, you cannot view this page.
+      <div class="payout-actions">
+        <button class="continue-btn" id="continueBtn">Got it — continue →</button>
+        <button class="back-btn" id="backBtn">Go back</button>
       </div>
     </div>
   </div>
@@ -652,25 +635,32 @@
   </div>
 
   <script>
-    const ageGate = document.getElementById("ageGate");
-    const yesBtn = document.getElementById("yesBtn");
-    const noBtn = document.getElementById("noBtn");
-    const denyMsg = document.getElementById("denyMsg");
 
-    yesBtn.addEventListener("click", function () {
-      ageGate.classList.add("hide");
-      document.body.classList.remove("lock");
-      localStorage.setItem("age21", "yes");
+    const payoutGate = document.getElementById("payoutGate");
+    const continueBtn = document.getElementById("continueBtn");
+    const backBtn = document.getElementById("backBtn");
+    const cta = document.querySelector(".cta");
+    let pendingUrl = "";
+
+    cta.addEventListener("click", function (event) {
+      event.preventDefault();
+      pendingUrl = cta.href;
+      payoutGate.classList.add("show");
+      payoutGate.setAttribute("aria-hidden", "false");
     });
 
-    noBtn.addEventListener("click", function () {
-      denyMsg.style.display = "block";
+    continueBtn.addEventListener("click", function () {
+      if (pendingUrl) {
+        window.location.href = pendingUrl;
+      }
     });
 
-    if (localStorage.getItem("age21") === "yes") {
-      ageGate.classList.add("hide");
-      document.body.classList.remove("lock");
-    }
+    backBtn.addEventListener("click", function () {
+      payoutGate.classList.remove("show");
+      payoutGate.setAttribute("aria-hidden", "true");
+      pendingUrl = "";
+    });
+
 
     document.addEventListener("DOMContentLoaded", function () {
       const query = window.location.search;
